@@ -64,6 +64,12 @@ module.exports = function(app, passport) {
       //uncoment for ajax requests only
       //res.send("successful registration as:" + req.user.local.email);
     });
+
+    app.post('/login', passport.authenticate('local-login', {
+        successRedirect : '/profile', // redirect to the secure profile section
+        failureRedirect : '/login', // redirect back to the signup page if there is an error
+        failureFlash : true // allow flash messages
+    }));
 };
 
 // route middleware to make sure a user is logged in
