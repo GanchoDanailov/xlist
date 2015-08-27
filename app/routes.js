@@ -5,7 +5,7 @@ module.exports = function(app, passport) {
     // HOME PAGE============================
     // =====================================
     app.get('/', function(req, res) {
-        //res.render('index.ejs'); // load the index.ejs file
+        res.render('index.ejs'); // load the index.ejs file
     });
 
     // =====================================
@@ -60,7 +60,7 @@ module.exports = function(app, passport) {
     app.post('/signup',passport.authenticate('local-signup'), function(req, res) {
       // If this function gets called, authentication was successful.
       // `req.user` contains the authenticated user.
-      //res.redirect('/users/' + req.user.username);
+      res.redirect('/profile');
       res.send("successful registration as:" + req.user.local.email);
     });
 };
