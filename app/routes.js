@@ -62,7 +62,7 @@ module.exports = function(app, passport) {
       // `req.user` contains the authenticated user.
       res.redirect('/profile');
       //uncoment for ajax requests only
-      res.send("successful registration as:" + req.user.local.email);
+      //res.send("successful registration as:" + req.user.local.email);
     });
 };
 
