@@ -61,6 +61,7 @@ module.exports = function(app, passport) {
       // If this function gets called, authentication was successful.
       // `req.user` contains the authenticated user.
       res.redirect('/profile');
+      //uncoment for ajax requests only
       res.send("successful registration as:" + req.user.local.email);
     });
 };
