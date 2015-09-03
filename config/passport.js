@@ -94,10 +94,14 @@ module.exports = function(passport) {
 
                         // create the user
                         var newUser            = new User();
-
+                        //console.log(req.body);
                         newUser.local.email    = email;
                         newUser.local.password = newUser.generateHash(password);
-
+                        newUser.local.name           = req.body.name;
+                        newUser.local.birthday       = req.body.birthday;
+                        newUser.local.country        = req.body.country;
+                        newUser.local.city           = req.body.city;
+                        newUser.local.gender         = req.body.gender;
                         newUser.save(function(err) {
                             if (err)
                                 return done(err);
@@ -169,7 +173,6 @@ module.exports = function(passport) {
                             user.facebook.token = token;
                             user.facebook.name  = profile.name.givenName + ' ' + profile.name.familyName;
                             user.facebook.email = (profile.emails[0].value || '').toLowerCase();
-
                             user.save(function(err) {
                                 if (err)
                                     return done(err);

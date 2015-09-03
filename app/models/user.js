@@ -7,7 +7,12 @@ var userSchema = mongoose.Schema({
 
     local            : {
         email        : String,
-        password     : String
+        password     : String,
+        name         : String,
+        birthday     : Date,
+        country      : String,
+        city         : String,
+        gender       : String
     },
     facebook         : {
         id           : String,
@@ -26,7 +31,9 @@ var userSchema = mongoose.Schema({
         token        : String,
         email        : String,
         name         : String
-    }
+    },
+    resetPasswordToken : String,
+    resetPasswordExpires: Date
 
 });
 
