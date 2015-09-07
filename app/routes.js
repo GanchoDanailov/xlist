@@ -263,7 +263,7 @@ module.exports = function(app, passport) {
                 });
                 var mailOptions = {
                     to: user.local.email,
-                    from: 'gancho.danailov@gmail.com',
+                    from: 'x.list.4.20@gmail.com',
                     subject: 'Node.js Password Reset',
                     text: 'You are receiving this because you (or someone else) have requested the reset of the password for your account.\n\n' +
                         'Please click on the following link, or paste this into your browser to complete the process:\n\n' +
