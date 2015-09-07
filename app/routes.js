@@ -1,24 +1,18 @@
 module.exports = function(app, passport) {
 
     // normal routes ===============================================================
-
+    var userAuth = require('./routes/userAuth');
+    var userProfile = require('./routes/userProfile');
     // show the home page (will also have our login links)
     app.get('/', function(req, res) {
         res.render('index.ejs');
     });
 
     // PROFILE SECTION =========================
-    app.get('/profile', isLoggedIn, function(req, res) {
-        res.render('profile.ejs', {
-            user: req.user
-        });
-    });
+    app.get('/profile', isLoggedIn, userAuth.profile);
 
     // LOGOUT ==============================
-    app.get('/logout', function(req, res) {
-        req.logout();
-        res.redirect('/');
-    });
+    app.get('/logout', userAuth.logout);
 
     // =============================================================================
     // AUTHENTICATE (FIRST LOGIN) ==================================================
@@ -34,36 +28,23 @@ module.exports = function(app, passport) {
     });
 
     // process the login form
-    app.post('/login', passport.authenticate('local-login', {
-        successRedirect : '/profile', // redirect to the secure profile section
-        failureRedirect : '/login', // redirect back to the signup page if there is an error
-        failureFlash : true // allow flash messages
-    }));
-    var sess;
-    // app.post('/login', passport.authenticate('local-login'), function(req, res) {
-    //     res.redirect('/profile');
-    //     //uncoment for ajax requests only
-    //     //res.send("successful registration as:" + req.user.local.email);
-    //     //var sess = req.session;
-    //     //sess.email = req.body.email;
-    //     //console.log(sess.email);
-    //     //res.end("done")
-    // });
+    // app.post('/login', passport.authenticate('local-login', {
+    //     successRedirect : '/profile', // redirect to the secure profile section
+    //     failureRedirect : '/login', // redirect back to the signup page if there is an error
+    //     failureFlash : true // allow flash messages
+    // }));
+
+    app.post('/login', passport.authenticate('local-login'), userAuth.postLogin);
 
     // SIGNUP =================================
     // show the signup form
     app.get('/signup', function(req, res) {
-        res.render('signup.ejs', {
-            message: req.flash('signupMessage')
-        });
+        res.render('signup.ejs');
     });
 
     // process the signup form
-    app.post('/signup', passport.authenticate('local-signup', {
-        successRedirect: '/profile', // redirect to the secure profile section
-        failureRedirect: '/signup', // redirect back to the signup page if there is an error
-        failureFlash: true // allow flash messages
-    }));
+    app.post('/signup', passport.authenticate('local-signup'), userAuth.postSignup);
+
 
     // facebook -------------------------------
 
@@ -216,120 +197,23 @@ module.exports = function(app, passport) {
     // =============================================================================
     // RESET PASSWORD  =============================================================
     // =============================================================================
-    app.get('/forgot', function(req, res) {
-        res.render('forgot', {
-            user: req.user
-        });
-    });
+    app.get('/forgot', userAuth.forgot);
 
-    var async = require('async');
-    var crypto = require('crypto');
-    var User = require('../app/models/user');
+    app.post('/forgot', userAuth.postForgot);
 
-    var nodemailer = require('nodemailer');
-    app.post('/forgot', function(req, res, next) {
-        async.waterfall([
-            function(done) {
-                crypto.randomBytes(20, function(err, buf) {
-                    var token = buf.toString('hex');
-                    done(err, token);
-                });
-            },
-            function(token, done) {
-                User.findOne({
-                    'local.email': req.body.email
-                }, function(err, user) {
-                    if (!user) {
-                        req.flash('error', 'No account with that email address exists.');
-                        //console.log('No account with that email address exists.')
-                        return res.redirect('/forgot');
-                    }
+    app.get('/reset/:token', userAuth.getResetToken);
 
-                    user.resetPasswordToken = token;
-                    user.resetPasswordExpires = Date.now() + 3600000; // 1 hour
+    app.post('/reset/:token', userAuth.postResetToken);
 
-                    user.save(function(err) {
-                        done(err, token, user);
-                    });
-                });
-            },
-            function(token, user, done) {
-                var transporter = nodemailer.createTransport({
-                    service: 'SendGrid',
-                    auth: {
-                        user: 'ganchodanailov',
-                        pass: 'gogo9102115586'
-                    }
-                });
-                var mailOptions = {
-                    to: user.local.email,
-                    from: 'x.list.4.20@gmail.com',
-                    subject: 'Node.js Password Reset',
-                    text: 'You are receiving this because you (or someone else) have requested the reset of the password for your account.\n\n' +
-                        'Please click on the following link, or paste this into your browser to complete the process:\n\n' +
-                        'http://' + req.headers.host + '/reset/' + token + '\n\n' +
-                        'If you did not request this, please ignore this email and your password will remain unchanged.\n'
-                };
-                transporter.sendMail(mailOptions, function(error, info) {
-                    if (error) {
-                        //console.log(error);
-                    } else {
-                        //console.log('Message sent: ' + info.response);
-                        res.redirect('/forgot');
-                    }
-                });
-            }
-        ]);
-    });
+    // =============================================================================
+    // USER PROFILE   ==============================================================
+    // =============================================================================
 
-    app.get('/reset/:token', function(req, res) {
-      //console.log("from get: " + req.params.token);
-        User.findOne({
-            resetPasswordToken: req.params.token,
-            resetPasswordExpires: {
-                $gt: Date.now()
-            }
-        }, function(err, user) {
-            if (!user) {
-                req.flash('error', 'Password reset token is invalid or has expired.');
-                return res.redirect('/forgot');
-            }
-            res.render('reset', {
-                user: req.user
-            });
-        });
-    });
+    var busboyBodyParser = require('../node_modules/busboy-body-parser');
 
-    app.post('/reset/:token', function(req, res) {
-      //console.log("from post: " + req.params.token);
-        async.waterfall([
-            function(done) {
-                User.findOne({
-                    resetPasswordToken: req.params.token,
-                    resetPasswordExpires: {
-                        $gt: Date.now()
-                    }
-                }, function(err, user) {
-                    if (!user) {
-                        req.flash('error', 'Password reset token is invalid or has expired.');
-                        //console.log("Password reset token is invalid or has expired");
-                        return res.redirect('back');
-                    }
+    app.post('/avatar/:user_id', busboyBodyParser({ limit: '5mb' }), userProfile.addUserAvatar);
 
-                    user.local.password = user.generateHash(req.body.password);
-                    user.resetPasswordToken = undefined;
-                    user.resetPasswordExpires = undefined;
-
-                    user.save(function(err) {
-                        req.logIn(user, function(err) {
-                            done(err, user);
-                        });
-                    });
-                });
-                res.end("done")
-                //res.redirect('/login');
-            }]);
-    });
+    app.get('/avatar', isLoggedIn, userProfile.getUserAvatar);
 
 };
 

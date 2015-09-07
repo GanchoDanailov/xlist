@@ -33,8 +33,8 @@ var userSchema = mongoose.Schema({
         name         : String
     },
     resetPasswordToken : String,
-    resetPasswordExpires: Date
-
+    resetPasswordExpires: Date,
+    avatarId: mongoose.Schema.ObjectId
 });
 
 // generating a hash
